@@ -1,22 +1,21 @@
-﻿# Furniture Overlap
+# Furniture Overlap
 
-Tailsideの家具を重ねて配置し、表示順を調整できるModのソースコードです。
-配布・導入・操作説明はSteamワークショップに掲載予定です。公開後、このREADMEから案内します。
+A Tailside mod for overlapping furniture, placing decorations freely, and adjusting their draw order.
+Downloads, installation instructions, and controls will be available on Steam Workshop. A link will be added here when published.
 
-## ビルド
+## Building
 
-.NET SDK・PowerShell・Tailside本体・BepInEx 5（Unity Mono向け）が必要です。
-リポジトリのルートで、ゲームの場所を指定して実行します。
+Requires the .NET SDK, PowerShell, Tailside, and BepInEx 5 for Unity Mono.
+Run from the repository root with your game installation path:
 
 ```powershell
 .\Build.ps1 -GameRoot 'D:\SteamLibrary\steamapps\common\Tailside'
 ```
 
-成果物は `release/` に出力されます。ゲームやBepInExのDLLは同梱しません。
+Build output is written to `release/`. Game and BepInEx DLLs are not included.
 
-`tests/` は開発用です。実行には通常のセーブから隔離したゲームコピーと、別途用意する検証用データが必要です。
+The development tests in `tests/` require an isolated game copy with save isolation and separately prepared test data.
 
-## ライセンス
+## License
 
-Mod独自のコード・文章は [0BSD](LICENSE) です。無保証で提供します。
-ゲーム画像と第三者ライブラリは対象外で、それぞれの権利・ライセンスに従います。
+[0BSD](LICENSE)
