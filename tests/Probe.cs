@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using BepInEx;
 using HarmonyLib;
@@ -177,6 +177,50 @@ public sealed class Probe : BaseUnityPlugin
         orderEnabled.Value=true;AccessTools.Method(typeof(Plugin),"SynchronizeOrders").Invoke(null,null);
         Check(nativeGroup.enabled && nativeGroup.sortingOrder==18,"reenable reapplies adjustment to original group");
         Plugin.ChangeOrder(boardItem,0,true);boardItem.isPlaced=true;manager.currentItem=paperItem;
+
+        // Reproduce the world-space NPC bubble being covered by promoted furniture.
+        var npcRoot=new GameObject("speech-test-npc");npcRoot.layer=31;
+        npcRoot.transform.position=new Vector3(20000,0,0);
+        var npc=npcRoot.AddComponent<NPCDialogueBubbleOnDistance>();npc.enabled=false;
+        var speechObject=new GameObject("speech-test-canvas",typeof(RectTransform),typeof(Canvas));
+        speechObject.layer=31;speechObject.transform.SetParent(npcRoot.transform,false);
+        var speech=speechObject.GetComponent<Canvas>();speech.renderMode=RenderMode.WorldSpace;speech.worldCamera=camera;
+        speech.sortingLayerName="Obstacles";speech.sortingOrder=3;
+        speech.GetComponent<RectTransform>().sizeDelta=Vector2.one;
+        var bubbleObject=new GameObject("speech-test-bubble",typeof(RectTransform),typeof(UnityEngine.UI.Image));
+        bubbleObject.layer=31;bubbleObject.transform.SetParent(speechObject.transform,false);
+        var bubbleRect=bubbleObject.GetComponent<RectTransform>();bubbleRect.sizeDelta=Vector2.one;
+        bubbleObject.GetComponent<UnityEngine.UI.Image>().color=Color.magenta;
+        AccessTools.Field(typeof(NPCDialogueBubbleOnDistance),"dialogueBubble").SetValue(npc,bubbleObject);
+        var speechPosition=speech.transform.position;var bubblePosition=bubbleRect.position;
+        Canvas.ForceUpdateCanvases();
+        Plugin.ChangeOrder(paperItem,1);
+        Check(same(sample(),paperReference),"GPU reproduces promoted furniture covering ordinary NPC bubble");
+        // Invoke the real patched Start, not the protection helper, to verify routing.
+        AccessTools.Method(typeof(NPCDialogueBubbleOnDistance),"Start").Invoke(npc,null);
+        bubbleObject.SetActive(true);Canvas.ForceUpdateCanvases();
+        var speechPixel=sample();
+        Check(speechPixel.r>.9f && speechPixel.b>.9f && speechPixel.g<.1f,"GPU NPC bubble renders in front of promoted furniture");
+        Check(speech.sortingLayerName=="BuildMode" && speech.sortingOrder==3 && (speech.isRootCanvas || speech.overrideSorting),"only speech canvas sorting is promoted layer="+speech.sortingLayerName+" order="+speech.sortingOrder+" override="+speech.overrideSorting);
+        Check(speech.transform.position==speechPosition && bubbleRect.position==bubblePosition,"bubble screen position and NPC position stay unchanged");
+        for(int step=0;step<10;step++)Plugin.ChangeOrder(paperItem,1);
+        Check(sample().b>.9f,"NPC bubble stays in front after repeated furniture forward steps");
+        orderEnabled.Value=false;AccessTools.Method(typeof(Plugin),"LateUpdate").Invoke(orderPlugin,null);
+        Check(speech.sortingLayerName=="Obstacles" && speech.sortingOrder==3 && !speech.overrideSorting,"disabling mod restores original speech canvas settings");
+        orderEnabled.Value=true;AccessTools.Method(typeof(Plugin),"LateUpdate").Invoke(orderPlugin,null);
+        Check(speech.sortingLayerName=="BuildMode" && sample().b>.9f,"reenabling protects already-existing speech bubble");
+        AccessTools.Method(typeof(Plugin),"RestoreSpeechOrder").Invoke(orderPlugin,new object[]{true});
+        Check(speech.sortingLayerName=="Obstacles" && !speech.overrideSorting,"shutdown cleanup restores original speech order");
+        speech.renderMode=RenderMode.ScreenSpaceOverlay;
+        AccessTools.Method(typeof(Plugin),"ProtectSpeech").Invoke(null,new object[]{npc,bubbleObject});
+        Check(speech.sortingLayerName=="Obstacles" && !speech.overrideSorting,"screen-space UI is excluded from speech adjustment");
+        speech.renderMode=RenderMode.WorldSpace;speech.sortingLayerName="Items";
+        AccessTools.Method(typeof(Plugin),"ProtectSpeech").Invoke(null,new object[]{npc,bubbleObject});
+        Check(speech.sortingLayerName=="Items","existing higher-priority speech layer is preserved");
+        UnityEngine.Object.Destroy(npcRoot);yield return null;
+        AccessTools.Method(typeof(Plugin),"LateUpdate").Invoke(orderPlugin,null);
+        Check(true,"destroyed speech canvases are safely retired");
+        Plugin.ChangeOrder(paperItem,0,true);
 
         var originalKeyboard=UnityEngine.InputSystem.Keyboard.current;
         var keyboard=UnityEngine.InputSystem.InputSystem.AddDevice<UnityEngine.InputSystem.Keyboard>();

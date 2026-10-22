@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace TailsideFurnitureOverlap
 {
-    [BepInPlugin(Id, "Furniture Overlap", "0.6.2")]
+    [BepInPlugin(Id, "Furniture Overlap", "1.0.0")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         public const string Id = "s_evans.tailside.furnitureoverlap";
@@ -37,7 +37,7 @@ namespace TailsideFurnitureOverlap
                 InstallPlacementAndSelection();
                 InstallDrawOrder();
                 InstallOrderHints();
-                Logger.LogInfo("Furniture Overlap 0.6.2 loaded. Carrying furniture: configured keyboard keys; D-pad Up / Down / Left = front / back / reset.");
+                Logger.LogInfo("Furniture Overlap 1.0.0 loaded. Carrying furniture: configured keyboard keys; D-pad Up / Down / Left = front / back / reset.");
             }
             catch (Exception ex)
             {
@@ -53,7 +53,7 @@ namespace TailsideFurnitureOverlap
         {
             if (stopped) return;
             stopped = true;
-            try { RemoveOrderHints(); }
+            try { RemoveOrderHints(); RestoreSpeechOrder(); }
             finally
             {
                 try { RestoreDrawOrders(); }
@@ -86,6 +86,12 @@ namespace TailsideFurnitureOverlap
 
         private void InstallDrawOrder()
         {
+            harmony.Patch(AccessTools.Method(typeof(NPCDialogueBubbleOnDistance), "Start"),
+                postfix: new HarmonyMethod(typeof(Plugin), nameof(ProtectSpeech)));
+            harmony.Patch(AccessTools.Method(typeof(NPCDialogueBubbleOnDistance), "ShowDialogue"),
+                prefix: new HarmonyMethod(typeof(Plugin), nameof(ProtectSpeech)));
+            harmony.Patch(AccessTools.Method(typeof(NPCDialogueBubbleOnDistance), "InteractReplayLastOrRandom"),
+                prefix: new HarmonyMethod(typeof(Plugin), nameof(ProtectSpeech)));
             orderFolder = Path.Combine(Paths.ConfigPath, "FurnitureOverlap", "order-data");
             forwardKey = Settings.Bind("DrawOrder", "ForwardKey", KeyCode.PageUp, "While carrying furniture: one step toward the front.");
             backwardKey = Settings.Bind("DrawOrder", "BackwardKey", KeyCode.PageDown, "While carrying furniture: one step toward the back.");

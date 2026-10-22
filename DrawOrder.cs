@@ -43,8 +43,9 @@ namespace TailsideFurnitureOverlap
         private void LateUpdate()
         {
             if (instance != this || overlapEnabled == null) return;
-            if (!overlapEnabled.Value) { RestoreDrawOrders(false); return; }
+            if (!overlapEnabled.Value) { RestoreDrawOrders(false); RestoreSpeechOrder(false); return; }
             SynchronizeOrders();
+            SynchronizeSpeechOrder();
         }
         private static void SynchronizeOrders()
         {
@@ -76,6 +77,64 @@ namespace TailsideFurnitureOverlap
             var state = new DrawOrderState(renderer) { Offset = offset };
             orderStates[item] = state;
             if (overlapEnabled.Value) state.Apply();
+        }
+
+        // NPC dialogue is world-space UI on Obstacles in the base game. Furniture
+        // promoted to Foreground must not cover it. Track only the actual dialogue
+        // canvas, never the NPC renderer or unrelated interface canvases.
+        private readonly Dictionary<Canvas, SpeechOrderState> speechOrders = new Dictionary<Canvas, SpeechOrderState>();
+        private readonly List<Canvas> retiredSpeech = new List<Canvas>();
+        private static void ProtectSpeech(NPCDialogueBubbleOnDistance __instance, GameObject ___dialogueBubble)
+        {
+            if (instance == null || ___dialogueBubble == null) return;
+            var canvas = ___dialogueBubble.GetComponentInParent<Canvas>(true);
+            if (canvas == null) canvas = ___dialogueBubble.GetComponentInChildren<Canvas>(true);
+            if (canvas == null || canvas.renderMode != RenderMode.WorldSpace) return;
+            if (!instance.speechOrders.ContainsKey(canvas))
+                instance.speechOrders.Add(canvas, new SpeechOrderState(canvas));
+            if (instance.overlapEnabled.Value) instance.speechOrders[canvas].Apply();
+        }
+        private void SynchronizeSpeechOrder()
+        {
+            retiredSpeech.Clear();
+            foreach (var pair in speechOrders)
+                if (pair.Key == null) retiredSpeech.Add(pair.Key);
+                else pair.Value.Apply();
+            foreach (var canvas in retiredSpeech) speechOrders.Remove(canvas);
+            retiredSpeech.Clear();
+        }
+        private void RestoreSpeechOrder(bool clear = true)
+        {
+            foreach (var state in speechOrders.Values) state.Restore();
+            if (clear) { speechOrders.Clear(); retiredSpeech.Clear(); }
+        }
+        private sealed class SpeechOrderState
+        {
+            private readonly Canvas canvas;
+            private readonly int layer, order;
+            private readonly bool overrides;
+            internal SpeechOrderState(Canvas target)
+            {
+                canvas = target; layer = target.sortingLayerID;
+                order = target.sortingOrder; overrides = target.overrideSorting;
+            }
+            internal void Apply()
+            {
+                if (canvas == null) return;
+                // BuildMode is immediately above Foreground in the game's layers.
+                // Keep already-higher dialogue UI at its original priority.
+                int front = SortingLayer.NameToID("BuildMode");
+                if (SortingLayer.GetLayerValueFromID(layer) > SortingLayer.GetLayerValueFromID(front)) front = layer;
+                canvas.overrideSorting = true;
+                canvas.sortingLayerID = front;
+                canvas.sortingOrder = order;
+            }
+            internal void Restore()
+            {
+                if (canvas == null) return;
+                canvas.sortingLayerID = layer; canvas.sortingOrder = order;
+                canvas.overrideSorting = overrides;
+            }
         }
 
         // Input routing: keyboard compatibility and temporary inventory D-pad mask.

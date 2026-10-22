@@ -30,8 +30,8 @@ try {
     $log=Get-Content "$validation/runtime.log" -Raw
     Copy-Item -LiteralPath $renderReport -Destination "$validation/render.report" -Force
     $render=Get-Content -LiteralPath $renderReport -Raw
-    if($process.ExitCode -ne 0 -or $render -notmatch 'checks=165' -or $log -notmatch 'SANDBOX_ISOLATED' -or $log -match '\[Error|\[Fatal|OVERLAP_PROBE_FAIL'){throw 'Probe failed; inspect validation/runtime.log and render.report'}
-    'PASS: 165 checks including real sprites, equal-priority herbs and GPU render-order readback; saves isolated.'
+    if($process.ExitCode -ne 0 -or $render -notmatch 'checks=176' -or $log -notmatch 'SANDBOX_ISOLATED' -or $log -match '\[Error|\[Fatal|OVERLAP_PROBE_FAIL'){throw 'Probe failed; inspect validation/runtime.log and render.report'}
+    'PASS: 176 checks including real sprites, equal-priority herbs and GPU render-order readback; saves isolated.'
 } finally {
     $env:MODSETUP_SANDBOX_ROOT=$previousSandbox
     $env:OVERLAP_SPRITE_FIXTURES=$previousFixtures
