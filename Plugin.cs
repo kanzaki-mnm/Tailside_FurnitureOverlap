@@ -9,10 +9,10 @@ using UnityEngine;
 
 namespace TailsideFurnitureOverlap
 {
-    [BepInPlugin(Id, "Furniture Overlap", "0.6.1")]
+    [BepInPlugin(Id, "Furniture Overlap", "0.6.2")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
-        public const string Id = "local.tailside.furnitureoverlap";
+        public const string Id = "s_evans.tailside.furnitureoverlap";
         private static Plugin instance;
         public ConfigFile Settings { get; private set; }
         private ConfigEntry<bool> overlapEnabled;
@@ -37,7 +37,7 @@ namespace TailsideFurnitureOverlap
                 InstallPlacementAndSelection();
                 InstallDrawOrder();
                 InstallOrderHints();
-                Logger.LogInfo("Furniture Overlap 0.6.1 loaded. Carrying furniture: configured keyboard keys; D-pad Up / Down / Left = front / back / reset.");
+                Logger.LogInfo("Furniture Overlap 0.6.2 loaded. Carrying furniture: configured keyboard keys; D-pad Up / Down / Left = front / back / reset.");
             }
             catch (Exception ex)
             {

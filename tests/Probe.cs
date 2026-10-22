@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using TailsideFurnitureOverlap;
 
-[BepInPlugin("local.tailside.furnitureoverlap.probe", "Furniture Overlap Probe", "0.1.0")]
+[BepInPlugin("s_evans.tailside.furnitureoverlap.probe", "Furniture Overlap Probe", "0.1.0")]
 [BepInDependency(Plugin.Id)]
 public sealed class Probe : BaseUnityPlugin
 {
