@@ -1,0 +1,30 @@
+# Build outputs and local verification data
+**/bin/
+**/obj/
+/release/
+/validation/
+/.local/
+**/fixtures/
+**/backups/
+
+# Game binaries, saves, configuration and credentials
+*.dll
+*.exe
+*.pdb
+*.zip
+*.log
+*.cfg
+*.sav
+*.key
+*.pem
+.env
+.env.*
+!.env.example
+ssfn*
+*.sentry
+
+# Editor files
+.vs/
+.idea/
+*.user
+*.suo
