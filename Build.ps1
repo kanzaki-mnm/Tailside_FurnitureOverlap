@@ -12,10 +12,8 @@ New-Item -ItemType Directory -Force $target | Out-Null
 Copy-Item "$PSScriptRoot/bin/Release/netstandard2.1/FurnitureOverlap.dll" $target -Force
 Copy-Item "$PSScriptRoot/README.md" $target -Force
 $allowed=@((Join-Path $target 'FurnitureOverlap.dll'),(Join-Path $target 'README.md'))
-foreach($notice in @('LICENSE')) {
-    Copy-Item -LiteralPath (Join-Path $PSScriptRoot $notice) -Destination $target -Force
-    $allowed+=Join-Path $target $notice
-}
+Copy-Item -LiteralPath "$PSScriptRoot/legal/0bsd.txt" -Destination (Join-Path $target 'LICENSE') -Force
+$allowed+=Join-Path $target 'LICENSE'
 $unexpected=Get-ChildItem -LiteralPath "$PSScriptRoot/release/BepInEx" -Recurse -File | Where-Object {$_.FullName -notin $allowed}
 if($unexpected){throw 'Unexpected release staging files; inspect before packaging'}
 $archive=Join-Path $PSScriptRoot "release/FurnitureOverlap-$version.zip"
