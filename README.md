@@ -1,7 +1,7 @@
-﻿# Furniture Overlap
+# Furniture Overlap
 
 A Tailside mod for overlapping furniture, placing decorations freely, and adjusting their draw order.
-Downloads, installation instructions, and controls will be available on Steam Workshop. A link will be added here when published.
+Download the mod and find installation instructions and controls on [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3824508337).
 
 ## Building
 
